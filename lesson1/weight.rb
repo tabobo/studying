@@ -2,12 +2,12 @@ puts "Как вас зовут?"
 name = gets.chomp
 
 puts "Введите ваш рост (см)."
-height = gets.chomp
+height = gets.to_i
 
-weight = height.to_i - 110
+weight = height - 110
 
 unless weight < 0
     puts "#{name}, привет! Ваш идеальный вес #{weight} кг."  
 else
-    puts "Ваш вес уже оптимальный."
+    puts "#{name}, привет! Ваш вес уже оптимальный."
 end
