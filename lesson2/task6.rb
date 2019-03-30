@@ -1,6 +1,4 @@
-cart = Hash.new
-every_sum = Hash.new
-sum = 0
+cart = {}
 
 loop do
   puts "Название товара (или 'стоп'):"
@@ -13,13 +11,10 @@ loop do
   puts "Количество купленного товара"
   amount = gets.chomp.to_f
     
-  every_sum = { "name" => name, "sum" => price * amount }
-  puts "Сумма за #{name}: #{every_sum["sum"]}"
-
-  cart[name] = { "price" => price, "amount" => amount}
+  cart[name] = { price: price, amount: amount, name_sum: price * amount }
 end
 
-cart.each { |name, hash| sum += hash["price"] * hash["amount"] }
+cart_sum = cart.values.sum { |properties| properties[:name_sum] }
 
 puts cart
-puts "Итоговая сумма всех покупок: #{sum}"
+puts "Итоговая сумма всех покупок: #{cart_sum}"

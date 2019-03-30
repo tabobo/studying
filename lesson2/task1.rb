@@ -1,15 +1,16 @@
-months = Hash.new
-  months['january'] = 31
-  months['february'] = 28
-  months['march'] = 31
-  months['april'] = 30
-  months['may'] = 31
-  months['june'] = 30
-  months['july'] = 31
-  months['august'] = 31
-  months['september'] = 30
-  months['october'] = 31
-  months['november'] = 30
-  months['december'] = 31
+months = {
+  january: 31,
+  february: 28,
+  march: 31,
+  april: 30,
+  may: 31,
+  june: 30,
+  july: 31,
+  august: 31,
+  september: 30,
+  october: 31,
+  november: 30,
+  december: 31
+}
 
 puts months.select { |name, days| days == 30 }

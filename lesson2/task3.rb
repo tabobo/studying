@@ -1,11 +1,9 @@
 array = [0, 1]
-i = 0
 
-while
-  i_new = array[i] + array[i.next]
+loop do
+  i_new = array[-1] + array[-2]
   break if i_new > 100
   array << i_new
-  i += 1
 end
 
 p array
