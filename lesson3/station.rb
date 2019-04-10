@@ -1,7 +1,7 @@
 require_relative './trains'
 
 class Station
-  attr_reader :trains
+  attr_reader :trains, :name
 
   def initialize(name)
     @name = name
@@ -9,7 +9,6 @@ class Station
   end
 
   def train_in(train)
-    @train = train
     @trains << train
   end
 
