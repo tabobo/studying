@@ -1,7 +1,3 @@
-require_relative './station'
-require_relative './route'
-require_relative './carriage'
-
 class Train
   attr_reader :carriage, :carriages, :speed, :type, :number
   def initialize(number)

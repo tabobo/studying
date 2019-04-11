@@ -1,5 +1,3 @@
-require_relative './station'
-
 class Route
   attr_reader :stations_list
 
