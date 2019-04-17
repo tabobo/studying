@@ -1,7 +1,18 @@
+require_relative 'modules/instance_counter'
+
 class Station
+  include InstanceCounter
+
   attr_reader :trains, :name
 
+  @@stations = []
+
+  def self.all
+    @@stations
+  end
+
   def initialize(name)
+    @@stations.push(self)
     @name = name
     @trains = []
   end

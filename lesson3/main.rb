@@ -1,3 +1,6 @@
+require_relative 'modules/producer'
+require_relative 'modules/instance_counter'
+
 require_relative './train'
 require_relative './route'
 require_relative './station'
@@ -13,7 +16,6 @@ class Programm
 
   def initialize
     @stations = []
-    @trains = []
     @routes = []
   end
 
@@ -76,10 +78,10 @@ class Programm
     puts "Введите номер поезда"
     number = gets.chomp
     if type == "CargoTrain"
-      @trains.push(CargoTrain.new(number))
+      CargoTrain.new(number)
       puts "Вы создали поезд. Номер: #{number}, тип: #{type}."
     elsif type == "PassengerTrain"
-      @trains.push(PassengerTrain.new(number))
+      PassengerTrain.new(number)
       puts "Вы создали поезд. Номер: #{number}, тип: #{type}."
     else
       puts "Такого типа поезда не существует."
@@ -121,7 +123,7 @@ class Programm
 
     puts "Чтобы назначить маршрут, введите номер поезда"
     train_number = gets.chomp
-    train = train_by_number(train_number)
+    train = Train.find(train_number)
     
     puts "Введите название маршрута"
     route_name = gets.chomp
@@ -134,7 +136,7 @@ class Programm
   def add_carriage # добавить вагоны к поезду
     puts "Введите номер поезда"
     train_number = gets.chomp
-    train = train_by_number(train_number)
+    train = Train.find(train_number)
     if train.type == :cargo
       carriage = CarriageCargo.new
       puts "Тип поезда: грузовой."
@@ -151,14 +153,14 @@ class Programm
   def delete_carriage # отцепить вагон
     puts "Введите номер поезда"
     train_number = gets.chomp
-    train = train_by_number(train_number)
+    train = Train.find(train_number)
     train.delete_carriage
   end
 
   def move_train # перемещать поезд по маршруту вперед и назад
     puts "Чтобы переместить поезд, введите номер поезда"
     train_number = gets.chomp
-    train = train_by_number(train_number)
+    train = Train.find(train_number)
     puts "Если хотите переместить поезд вперед, введите forward, если назад - back"
     choice = gets.chomp
     if choice == "forward"
@@ -192,9 +194,6 @@ class Programm
     @routes.find { |route| route.name == route_name }
   end
 
-  def train_by_number(train_number)
-    @trains.find { |train| train.number == train_number }
-  end
 end
 
 programm = Programm.new

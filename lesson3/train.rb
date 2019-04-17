@@ -1,11 +1,26 @@
+require_relative 'modules/producer'
+require_relative 'modules/instance_counter'
+
 class Train
+  include Producer
+  include InstanceCounter
+
   attr_reader :carriage, :carriages, :speed, :type, :number
+  
+  @@trains = []
+
+  def self.find(number)
+    @@trains.find { |train| train.number == number }
+  end
+
   def initialize(number)
     @number = number
     @type = type
     @carriage = 0
     @carriages = []
     @speed = 0
+
+    @@trains << self
   end
 
   def increase_speed(speed)
