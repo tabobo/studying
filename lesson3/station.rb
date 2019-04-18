@@ -15,6 +15,7 @@ class Station
     @@stations.push(self)
     @name = name
     @trains = []
+    register_instance
   end
 
   def train_in(train)
