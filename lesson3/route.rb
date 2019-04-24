@@ -11,12 +11,15 @@ class Route
   end
 
   def add_station(station)
+    raise "Станция #{station.name} уже есть в маршруте" if @stations_list.include?(station)
     @stations_list.insert(-2, station)
     puts "К маршруту добавлена станция #{station.name}"
   end
 
   def delete_middle_station(station)
-    @stations_list.delete(station) if @stations_list.first != station && @stations_list.last != station
+    raise "Вы не можете удалить первую и последнюю станцию маршрута." if [stations_list.first, stations_list.last].include?(station)
+      @stations_list.delete(station) 
+      puts "Из маршрута удалена станция #{station.name}"
   end
 
   def show_stations

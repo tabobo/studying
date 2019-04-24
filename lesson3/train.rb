@@ -6,6 +6,9 @@ class Train
   include InstanceCounter
 
   attr_reader :carriage, :carriages, :speed, :type, :number
+  attr_accessor :route
+
+  NUMBER_FORMAT = /^[a-z\d]{3}(-[a-z\d]{2})?$/i
   
   @@trains = {}
 
@@ -19,6 +22,7 @@ class Train
     @carriage = 0
     @carriages = []
     @speed = 0
+    validate!
 
     @@trains[number] = self
     register_instance
@@ -32,24 +36,28 @@ class Train
     @speed = 0
   end
 
+  def valid?
+    validate!
+  rescue
+    false
+    retry
+  end
+
+  def self.all
+    @@trains
+  end
+
   def add_carriage(carriage)
-    puts "Чтобы прицепить вагон, поезд должен стоять!" if @speed != 0
-    if carriage.type == @type
-      @carriages.push(carriage)
-      puts "Вагон прицеплен. Количество вагонов в поезде #{number}: #{@carriages.size}."
-    else 
-      puts "Тип поезда и вагона не совпадают!"
-    end
+    raise "Чтобы прицепить вагон поезд должен стоять!" unless @speed.zero?
+    @carriages.push(carriage) if carriage.type == @type
+    puts "Вагон прицеплен. Количество вагонов в поезде #{number}: #{@carriages.size}."
   end
 
   def delete_carriage
-    puts "Чтобы отцепить вагон поезд должен стоять!" if @speed != 0
-    if @carriages.size > 0
-      @carriages.pop 
-      puts "Вагон отцеплен. Количество вагонов в поезде #{number}: #{@carriages.size}."
-    else 
-      puts "Тип поезда и вагона не совпадают!"
-    end
+    raise "Чтобы отцепить вагон поезд должен стоять!" unless @speed.zero?
+    raise "В поезде нет вагонов" unless @carriages.any?
+    @carriages.pop 
+    puts "Вагон отцеплен. Количество вагонов в поезде #{number}: #{@carriages.size}."
   end
 
   def set_route(route)
@@ -86,5 +94,12 @@ class Train
 
   def station_through_index(index)
     @route.stations_list[index]
+  end
+
+  def validate!
+    raise "Вы не ввели номер поезда" if number.nil?
+    raise "В номере должно быть минимум 3 символа" if number.length < 3
+    raise "Неверный формат номера" if number !~ NUMBER_FORMAT
+    true
   end
 end
