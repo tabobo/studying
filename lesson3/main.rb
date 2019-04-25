@@ -139,11 +139,13 @@ class Programm
       raise "Станции #{station_name} не существует" unless @stations.include?(station)
       raise "Вы не ввели названия станций" if station_name.size == 0
       route_edit.add_station(station)
+      puts "К маршруту добавлена станция #{station.name}."
     elsif choice == "delete"
       puts "Введите название станции, которую вы хотите удалить"
       station_name = gets.chomp
       station = station_by_name(station_name)
       route_edit.delete_middle_station(station)
+      puts "Из маршрута удалена станция #{station.name}."
     else 
       start_programm
     end
@@ -183,12 +185,12 @@ class Programm
     train = Train.find(train_number)
     if train.type == :cargo
       carriage = CarriageCargo.new
-      puts "Тип поезда: грузовой."
       train.add_carriage(carriage)
+      puts "Вагон прицеплен к поезду #{train_number}. Тип поезда: грузовой. Количество вагонов: #{train.carriages.size}."
     elsif train.type == :passenger
       carriage = CarriagePassenger.new
-      puts "Тип поезда: пассажирский."
       train.add_carriage(carriage)
+      puts "Вагон прицеплен к поезду #{train_number}. Тип поезда: пассажирский. Количество вагонов: #{train.carriages.size}."
     else
       puts "Поезд не найден"
     end
@@ -204,6 +206,7 @@ class Programm
     raise "Поезда с таким номером не существует" if Train.find(train_number).nil?
     train = Train.find(train_number)
     train.delete_carriage
+    puts "Вагон отцеплен от поезда #{train_number}. Количество вагонов: #{train.carriages.size}."
 
   rescue StandardError => e
     error_message e

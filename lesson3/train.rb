@@ -50,14 +50,12 @@ class Train
   def add_carriage(carriage)
     raise "Чтобы прицепить вагон поезд должен стоять!" unless @speed.zero?
     @carriages.push(carriage) if carriage.type == @type
-    puts "Вагон прицеплен. Количество вагонов в поезде #{number}: #{@carriages.size}."
   end
 
   def delete_carriage
     raise "Чтобы отцепить вагон поезд должен стоять!" unless @speed.zero?
     raise "В поезде нет вагонов" unless @carriages.any?
     @carriages.pop 
-    puts "Вагон отцеплен. Количество вагонов в поезде #{number}: #{@carriages.size}."
   end
 
   def set_route(route)
