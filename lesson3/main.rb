@@ -14,6 +14,9 @@ class Programm
 
   attr_accessor :stations, :trains, :routes
 
+  @@carriage_cargo_index = 0
+  @@carriage_pass_index = 0
+
   def initialize
     @stations = []
     @routes = []
@@ -37,6 +40,7 @@ class Programm
     puts "Введите 6, если вы хотите отцепить вагоны от поезда."
     puts "Введите 7, если вы хотите перемещать поезд по маршруту вперед и назад."
     puts "Введите 8, если вы хотите просматривать список станций и список поездов на станции."
+    puts "Введите 8-1, если вы хотите занять место в пассажирском вагоне или загрузить грузовой вагон."
     puts "Введите 0, если вы хотите закончить программу."
     puts "---------"
 
@@ -60,6 +64,8 @@ class Programm
       move_train
     when "8"
       stations_and_trains
+    when "8-1"
+      take_place_carriage
     when "0" || "стоп"
     exit
     else
@@ -184,13 +190,17 @@ class Programm
     raise "Поезда с таким номером не существует" if Train.find(train_number).nil?
     train = Train.find(train_number)
     if train.type == :cargo
-      carriage = CarriageCargo.new
+      puts "Введите объем вагона"
+      volume = gets.to_i
+      carriage = CarriageCargo.new(volume, @@carriage_cargo_index += 1)
       train.add_carriage(carriage)
-      puts "Вагон прицеплен к поезду #{train_number}. Тип поезда: грузовой. Количество вагонов: #{train.carriages.size}."
+      puts "Вагон прицеплен к поезду #{train_number}. Объем вагона: #{volume}. Тип поезда: грузовой. Количество вагонов: #{train.carriages.size}."
     elsif train.type == :passenger
-      carriage = CarriagePassenger.new
+      puts "Введите количество мест"
+      number_places = gets.to_i
+      carriage = CarriagePassenger.new(number_places, @@carriage_pass_index += 1)
       train.add_carriage(carriage)
-      puts "Вагон прицеплен к поезду #{train_number}. Тип поезда: пассажирский. Количество вагонов: #{train.carriages.size}."
+      puts "Вагон прицеплен к поезду #{train_number}. Количество мест в вагоне: #{number_places}. Тип поезда: пассажирский. Количество вагонов: #{train.carriages.size}."
     else
       puts "Поезд не найден"
     end
@@ -246,8 +256,52 @@ class Programm
     station = station_by_name(station_name)
     raise "Станции #{station_name} не существует" unless @stations.include?(station)
     puts "На станции #{station.name} находятся следующие поезда: " 
-    station.trains.each_with_index { |train, i| puts "#{i + 1}. #{train.number}" }
+    station.each_train do |train|
+    puts "#{train.number}. Тип #{train.type}. Количество вагонов: #{train.carriages.size}."
+    end
     
+  rescue StandardError => e
+    error_message e
+  end
+
+  def take_place_carriage # Занять место в вагоне
+    raise "Вы не создали ни одного поезда" if Train.all.empty?
+    puts "Введите номер поезда"
+    train_number = gets.chomp
+    raise "Поезда с таким номером не существует" if Train.find(train_number).nil?
+    train = Train.find(train_number)
+    raise "В поезде #{train_number} нет вагонов." if train.carriages.size == 0
+    if train.type == :cargo
+      puts "Список вагонов в грузовом поезде #{train_number}:"
+      train.each_carriage do |carriage|
+        puts "Вагон №#{carriage.number}. Количество свободного объема: #{carriage.free_volume}. Количество занятого объема: #{carriage.occupied_volume}"
+      end
+      puts "Введите номер вагона, который вы хотите загрузить"
+      carriage_index = gets.to_i 
+      carriage = train.carriages[carriage_index - 1]
+      raise "Вагона с номером #{carriage_index} не существует." if carriage_index > train.carriages.size
+      raise "В вагоне #{carriage_index} нет свободного места." if carriage.free_volume == 0
+      puts "Введите количество объема, который вы хотите загрузить в вагон."
+      amount_volume = gets.to_i
+      raise "Недостаточно объема вагона. Доступный объем: #{carriage.free_volume}." if amount_volume > carriage.free_volume
+      carriage.take_volume(amount_volume)
+      puts "Вы заняли #{amount_volume} единицы объема в вагоне #{carriage_index}."
+    elsif train.type == :passenger
+      puts "Список вагонов в пассажирском поезде #{train_number}:"
+      train.each_carriage do |carriage|
+        puts "Вагон №#{carriage.number}. Количество свободных мест: #{carriage.free_places}. Количество занятых мест: #{carriage.taken_places}"
+      end
+      puts "Введите номер вагона, где вы хотите занять место"
+      carriage_index = gets.to_i 
+      raise "Вагона с номером #{carriage_index} не существует." if carriage_index > train.carriages.size
+      carriage = train.carriages[carriage_index - 1]
+      raise "В вагоне #{carriage_index} нет мест." if carriage.free_places == 0
+      carriage.take_place
+      puts "Вы заняли одно место в вагоне #{carriage_index}."
+    else
+      puts "Поезд не найден"
+    end
+
   rescue StandardError => e
     error_message e
   end

@@ -88,6 +88,10 @@ class Train
     @station_index -= 1 unless @station_index == 0
   end
 
+  def each_carriage
+    @carriages.each { |carriage| yield(carriage) } if block_given?
+  end
+
   private # метод используется только внутри класса
 
   def station_through_index(index)
