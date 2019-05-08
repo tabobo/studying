@@ -8,8 +8,8 @@ class Train
   attr_reader :carriage, :carriages, :speed, :type, :number
   attr_accessor :route
 
-  NUMBER_FORMAT = /^[a-z\d]{3}(-[a-z\d]{2})?$/i
-  
+  NUMBER_FORMAT = /^[a-z\d]{3}(-[a-z\d]{2})?$/i.freeze
+
   @@trains = {}
 
   def self.find(number)
@@ -38,7 +38,7 @@ class Train
 
   def valid?
     validate!
-  rescue
+  rescue StandardError
     false
     retry
   end
@@ -48,17 +48,19 @@ class Train
   end
 
   def add_carriage(carriage)
-    raise "Чтобы прицепить вагон поезд должен стоять!" unless @speed.zero?
+    raise 'Чтобы прицепить вагон поезд должен стоять!' unless @speed.zero?
+
     @carriages.push(carriage) if carriage.type == @type
   end
 
   def delete_carriage
-    raise "Чтобы отцепить вагон поезд должен стоять!" unless @speed.zero?
-    raise "В поезде нет вагонов" unless @carriages.any?
-    @carriages.pop 
+    raise 'Чтобы отцепить вагон поезд должен стоять!' unless @speed.zero?
+    raise 'В поезде нет вагонов' unless @carriages.any?
+
+    @carriages.pop
   end
 
-  def set_route(route)
+  def assign_route(route)
     @route = route
     @station_index = 0
     route.stations_list.first.train_in self
@@ -85,23 +87,24 @@ class Train
   def move_back
     current_station.train_out self
     previous_station.train_in self
-    @station_index -= 1 unless @station_index == 0
+    @station_index -= 1 unless @station_index.zero?
   end
 
   def each_carriage
     @carriages.each { |carriage| yield(carriage) } if block_given?
   end
 
-  private # метод используется только внутри класса
+  private
 
   def station_through_index(index)
     @route.stations_list[index]
   end
 
   def validate!
-    raise "Вы не ввели номер поезда" if number.nil?
-    raise "В номере должно быть минимум 3 символа" if number.length < 3
-    raise "Неверный формат номера" if number !~ NUMBER_FORMAT
+    raise 'Вы не ввели номер поезда' if number.nil?
+    raise 'В номере должно быть минимум 3 символа' if number.length < 3
+    raise 'Неверный формат номера' if number !~ NUMBER_FORMAT
+
     true
   end
 end

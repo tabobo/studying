@@ -15,8 +15,8 @@ class CarriageCargo < Carriage
   def occupied_volume
     @taken_volume
   end
-  
+
   def free_volume
     @volume - @taken_volume
-  end 
+  end
 end

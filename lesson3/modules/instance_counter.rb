@@ -15,8 +15,6 @@ module InstanceCounter
     end
   end
 
-  protected
-
   module InstanceMethods
     def register_instance
       self.class.increment_instances_count
