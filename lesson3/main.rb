@@ -9,15 +9,16 @@ require_relative './passenger_train'
 require_relative './carriage'
 require_relative './carriage_cargo'
 require_relative './carriage_pass'
+
+# rubocop:disable Metrics/CyclomaticComplexity, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/ClassLength, Metrics/MethodLength
 class Programm
   attr_accessor :stations, :trains, :routes
-
-  @@carriage_cargo_index = 0
-  @@carriage_pass_index = 0
 
   def initialize
     @stations = []
     @routes = []
+    @carriage_cargo_index = 0
+    @carriage_pass_index = 0
   end
 
   def programm_process
@@ -57,34 +58,22 @@ class Programm
 
   def user_action(choice)
     case choice
-    when '1'
-      new_station
-    when '2'
-      new_train
-    when '3'
-      new_route
-    when '9'
-      manage_route
-    when '4'
-      assign_route
-    when '5'
-      add_carriage
-    when '6'
-      delete_carriage
-    when '7'
-      move_train
-    when '8'
-      stations_and_trains
-    when '8-1'
-      take_place_carriage
-    when '0' || 'стоп'
-      exit
-    else
-      puts "Sorry, I didn't understand you."
+    when '1' then new_station
+    when '2' then new_train
+    when '3' then new_route
+    when '9' then manage_route
+    when '4' then assign_route
+    when '5' then add_carriage
+    when '6' then delete_carriage
+    when '7' then move_train
+    when '8' then stations_and_trains
+    when '8-1' then take_place_carriage
+    when '0' || 'стоп' then exit
+    else puts "Sorry, I didn't understand you."
     end
   end
 
-  # создание новой станции
+  # create a new station
   def new_station
     puts 'Введите название новой станции:'
     name = gets.chomp
@@ -100,7 +89,7 @@ class Programm
     retry
   end
 
-  # создание нового поезда
+  # create a new train
   def new_train
     puts 'Введите номер поезда '\
     '(латинские буквы или цифры в формате ххххх или ххх-хх)'
@@ -123,7 +112,7 @@ class Programm
     retry
   end
 
-  # Создавать маршруты и управлять станциями в нем (добавлять, удалять)
+  # create a route and manage stations (add, delete)
   def new_route
     raise 'Для создания маршрута нужны минимум 2 станции.' if @stations.empty?
 
@@ -150,7 +139,7 @@ class Programm
     print_error_message e.message
   end
 
-  # Выбрать маршрут и управлять станциями на нем (добавлять, удалять)
+  # choose a route and manage it (add, delete stations)
   def manage_route
     raise 'Вы не создали ни одного маршрута' if @routes.empty?
 
@@ -186,7 +175,7 @@ class Programm
     print_error_message e.message
   end
 
-  # Назначить маршрут поезду
+  # assign a route to a train
   def assign_route
     raise 'Вы не создали ни одного маршрута' if @routes.empty?
     raise 'Вы не создали ни одного поезда' if Train.all.empty?
@@ -211,7 +200,8 @@ class Programm
     print_error_message e.message
   end
 
-  # добавить вагоны к поезду
+  # add carriages to a train
+
   def add_carriage
     raise 'Вы не создали ни одного поезда' if Train.all.empty?
 
@@ -223,7 +213,7 @@ class Programm
     if train.type == :cargo
       puts 'Введите объем вагона'
       volume = gets.to_i
-      carriage = CarriageCargo.new(volume, @@carriage_cargo_index += 1)
+      carriage = CarriageCargo.new(volume, @carriage_cargo_index += 1)
       train.add_carriage(carriage)
       puts "Вагон прицеплен к поезду #{train_number}. " \
            "Объем вагона: #{volume}. Тип поезда: грузовой. " \
@@ -231,7 +221,7 @@ class Programm
     elsif train.type == :passenger
       puts 'Введите количество мест'
       number_places = gets.to_i
-      carriage = CarriagePassenger.new(number_places, @@carriage_pass_index += 1)
+      carriage = CarriagePassenger.new(number_places, @carriage_pass_index += 1)
       train.add_carriage(carriage)
       puts "Вагон прицеплен к поезду #{train_number}. " \
            "Количество мест в вагоне: #{number_places}. " \
@@ -243,7 +233,7 @@ class Programm
     print_error_message e.message
   end
 
-  # отцепить вагон
+  # delete carriages from a train
   def delete_carriage
     raise 'Вы не создали ни одного поезда' if Train.all.empty?
 
@@ -258,7 +248,7 @@ class Programm
     print_error_message e.message
   end
 
-  # перемещать поезд по маршруту вперед и назад
+  # move train forward and back
   def move_train
     raise 'Вы не создали ни одного поезда' if Train.all.empty?
 
@@ -272,7 +262,9 @@ class Programm
     puts 'Если хотите переместить поезд вперед, введите forward, если назад - back'
     choice = gets.chomp
     if choice == 'forward'
-      raise 'Поезд уже находится на конечной станции.' if train.current_station == train.route.stations_list.last
+      if train.current_station == train.route.stations_list.last
+        raise 'Поезд уже находится на конечной станции.'
+      end
 
       train.move_forward
       puts "Поезд переместился вперед на станцию #{train.current_station.name}"
@@ -290,7 +282,7 @@ class Programm
     print_error_message e.message
   end
 
-  # Просматривать список станций и список поездов на станции
+  # show stations and trains on stations
   def stations_and_trains
     raise 'Вы не создали ни одной станции' if @stations.empty?
 
@@ -309,7 +301,7 @@ class Programm
     print_error_message e.message
   end
 
-  # Занять место в вагоне
+  # take place in a carriage
   def take_place_carriage
     raise 'Вы не создали ни одного поезда' if Train.all.empty?
 
@@ -330,7 +322,7 @@ class Programm
       puts 'Введите номер вагона, который вы хотите загрузить'
       carriage_index = gets.to_i
       carriage = train.carriages[carriage_index - 1]
-      raise "Вагона с номером #{carriage_index} не существует." if carriage_index > train.carriages.size
+      raise "Вагона № #{carriage_index} не существует." if carriage_index > train.carriages.size
       raise "В вагоне #{carriage_index} нет свободного места." if carriage.free_volume.zero?
 
       puts 'Введите количество объема, который вы хотите загрузить в вагон.'
