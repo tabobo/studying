@@ -10,10 +10,14 @@ class Train
 
   NUMBER_FORMAT = /^[a-z\d]{3}(-[a-z\d]{2})?$/i.freeze
 
-  @@trains = {}
+  @trains = {}
 
   def self.find(number)
-    @@trains[number]
+    @trains[number]
+  end
+
+  def self.add_train(number, train)
+    @trains[number] = train
   end
 
   def initialize(number)
@@ -24,7 +28,8 @@ class Train
     @speed = 0
     validate!
 
-    @@trains[number] = self
+    Train.add_train(number, self)
+
     register_instance
   end
 
@@ -44,7 +49,7 @@ class Train
   end
 
   def self.all
-    @@trains
+    @trains
   end
 
   def add_carriage(carriage)

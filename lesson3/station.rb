@@ -5,16 +5,20 @@ class Station
 
   attr_reader :trains, :name
 
-  @@stations = []
+  @stations = []
 
-  def self.all
-    @@stations
+  class << self
+    attr_accessor :stations
+
+    def all
+      @stations
+    end
   end
 
   def initialize(name)
-    @@stations.push(self)
     @name = name
     @trains = []
+    self.class.stations << self
     register_instance
   end
 
