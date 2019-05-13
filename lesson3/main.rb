@@ -10,8 +10,11 @@ require_relative './carriage'
 require_relative './carriage_cargo'
 require_relative './carriage_pass'
 
-# rubocop:disable Metrics/CyclomaticComplexity, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/ClassLength, Metrics/MethodLength
-class Programm
+class Main
+  class WrongInput < StandardError; end
+  class NoInput < StandardError; end
+  class NoData < StandardError; end
+
   attr_accessor :stations, :trains, :routes
 
   def initialize
@@ -21,7 +24,7 @@ class Programm
     @carriage_pass_index = 0
   end
 
-  def programm_process
+  def program_process
     loop do
       show_menu
 
@@ -36,7 +39,7 @@ class Programm
     end
   end
 
-  def show_menu
+  def show_menu # rubocop:disable Metrics/MethodLength
     puts '---------'
     puts 'Здравствуйте, это программа Железная дорога. Что вы хотите сделать?'
     puts 'Введите 1, если вы хотите создать станцию.'
@@ -56,7 +59,7 @@ class Programm
     puts '---------'
   end
 
-  def user_action(choice)
+  def user_action(choice) # rubocop:disable Metrics/MethodLength
     case choice
     when '1' then new_station
     when '2' then new_train
@@ -73,12 +76,11 @@ class Programm
     end
   end
 
-  # create a new station
   def new_station
     puts 'Введите название новой станции:'
     name = gets.chomp
+    raise 'Вы не ввели название станции' if name.empty?
     new_station = station_by_name(name)
-    raise 'Вы не ввели название станции' if name.nil? || name.empty?
     raise "Станция #{name} уже существует" if @stations.include?(new_station)
 
     station = Station.new(name)
@@ -86,51 +88,26 @@ class Programm
     puts "Создана станция #{name}"
   rescue StandardError => e
     print_error_message e.message
-    retry
   end
 
-  # create a new train
   def new_train
-    puts 'Введите номер поезда '\
-    '(латинские буквы или цифры в формате ххххх или ххх-хх)'
-    number = gets.chomp
-    raise 'Поезд с таким номером уже существует' unless Train.find(number).nil?
-
-    puts 'Введите тип поезда: PassengerTrain или CargoTrain'
-    type = gets.chomp
-    if type == 'CargoTrain'
-      CargoTrain.new(number)
-      puts "Вы создали поезд. Номер: #{number}, тип: #{type}."
-    elsif type == 'PassengerTrain'
-      PassengerTrain.new(number)
-      puts "Вы создали поезд. Номер: #{number}, тип: #{type}."
-    else
-      puts 'Такого типа поезда не существует.'
-    end
-  rescue StandardError => e
-    print_error_message e.message
-    retry
+    number = ask_train_number
+    type = ask_train_type
+    Object.const_get(type).new(number)
+    puts "Вы создали поезд. Номер: #{number}, тип: #{type}."
   end
 
-  # create a route and manage stations (add, delete)
   def new_route
-    raise 'Для создания маршрута нужны минимум 2 станции.' if @stations.empty?
-
-    puts 'Cписок станций:'
-    @stations.each_with_index { |station, i| puts "#{i + 1}. #{station.name} " }
+    show_stations
     puts 'Чтобы создать маршрут, введите первую и последнюю станцию на нем.'
     station_name1 = gets.chomp
     station_name2 = gets.chomp
+    raise 'Вы не ввели название станции' if station_name1.empty? || station_name2.empty?
     station1 = station_by_name(station_name1)
     station2 = station_by_name(station_name2)
     raise "Станции #{station_name1} не существует" unless @stations.include?(station1)
     raise "Станции #{station_name2} не существует" unless @stations.include?(station2)
-    raise 'Вы не ввели названия станций' if station_name1.empty? || station_name2.empty?
-
-    if station_name1 == station_name2
-      raise 'Невозможно создать маршрут. '\
-            'Первая и последняя станция должны быть разными.'
-    end
+    raise 'Первая и последняя станция должны быть разными.' if station_name1 == station_name2
 
     route = Route.new(station1, station2)
     @routes.push(route)
@@ -169,25 +146,20 @@ class Programm
       route_edit.delete_middle_station(station)
       puts "Из маршрута удалена станция #{station.name}."
     else
-      start_programm
+      program_process
     end
   rescue StandardError => e
     print_error_message e.message
   end
 
-  # assign a route to a train
   def assign_route
     raise 'Вы не создали ни одного маршрута' if @routes.empty?
-    raise 'Вы не создали ни одного поезда' if Train.all.empty?
 
     puts 'Список существующих маршрутов:'
     @routes.each_with_index { |route, i| puts "#{i + 1}. #{route.name} " }
 
-    puts 'Чтобы назначить маршрут, введите номер поезда'
-    train_number = gets.chomp
-    raise 'Поезда с таким номером не существует' if Train.find(train_number).nil?
-
-    train = Train.find(train_number)
+    number = ask_train
+    train = Train.find(number)
 
     puts 'Введите название маршрута'
     route_name = gets.chomp
@@ -195,20 +167,13 @@ class Programm
     raise "Маршрут #{route_name} не найден" unless @routes.include?(route)
 
     train.assign_route(route)
-    puts "Поезду #{train_number} был назначен маршрут #{route.name}."
+    puts "Поезду #{number} был назначен маршрут #{route.name}."
   rescue StandardError => e
     print_error_message e.message
   end
 
-  # add carriages to a train
-
   def add_carriage
-    raise 'Вы не создали ни одного поезда' if Train.all.empty?
-
-    puts 'Введите номер поезда'
-    train_number = gets.chomp
-    raise 'Поезда с таким номером не существует' if Train.find(train_number).nil?
-
+    train_number = ask_train
     train = Train.find(train_number)
     if train.type == :cargo
       puts 'Введите объем вагона'
@@ -229,33 +194,17 @@ class Programm
     else
       puts 'Поезд не найден'
     end
-  rescue StandardError => e
-    print_error_message e.message
   end
 
-  # delete carriages from a train
   def delete_carriage
-    raise 'Вы не создали ни одного поезда' if Train.all.empty?
-
-    puts 'Введите номер поезда'
-    train_number = gets.chomp
-    raise 'Поезда с таким номером не существует' if Train.find(train_number).nil?
-
+    train_number = ask_train
     train = Train.find(train_number)
     train.delete_carriage
     puts "Вагон отцеплен от поезда #{train_number}. Количество вагонов: #{train.carriages.size}."
-  rescue StandardError => e
-    print_error_message e.message
   end
 
-  # move train forward and back
   def move_train
-    raise 'Вы не создали ни одного поезда' if Train.all.empty?
-
-    puts 'Чтобы переместить поезд, введите номер поезда'
-    train_number = gets.chomp
-    raise 'Поезда с таким номером не существует' if Train.find(train_number).nil?
-
+    train_number = ask_train
     train = Train.find(train_number)
     raise 'Поезду не назначен ни один маршрут' if train.route.nil?
 
@@ -301,24 +250,13 @@ class Programm
     print_error_message e.message
   end
 
-  # take place in a carriage
   def take_place_carriage
-    raise 'Вы не создали ни одного поезда' if Train.all.empty?
-
-    puts 'Введите номер поезда'
-    train_number = gets.chomp
-    raise 'Поезда с таким номером не существует' if Train.find(train_number).nil?
-
+    train_number = ask_train
     train = Train.find(train_number)
     raise "В поезде #{train_number} нет вагонов." if train.carriages.empty?
 
     if train.type == :cargo
-      puts "Список вагонов в грузовом поезде #{train_number}:"
-      train.each_carriage do |carriage|
-        puts "Вагон №#{carriage.number}. Количество свободного " \
-             "объема: #{carriage.free_volume}. " \
-             "Количество занятого объема: #{carriage.occupied_volume}."
-      end
+      show_list_cargo_carriages(train, train_number)
       puts 'Введите номер вагона, который вы хотите загрузить'
       carriage_index = gets.to_i
       carriage = train.carriages[carriage_index - 1]
@@ -334,17 +272,10 @@ class Programm
       carriage.take_volume(amount_volume)
       puts "Вы заняли #{amount_volume} единицы объема в вагоне #{carriage_index}."
     elsif train.type == :passenger
-      puts "Список вагонов в пассажирском поезде #{train_number}:"
-      train.each_carriage do |carriage|
-        puts "Вагон №#{carriage.number}. " \
-             "Количество свободных мест: #{carriage.free_places}. " \
-             "Количество занятых мест: #{carriage.taken_places}."
-      end
+      show_list_pass_carriages(train, train_number)
       puts 'Введите номер вагона, где вы хотите занять место'
       carriage_index = gets.to_i
-      if carriage_index > train.carriages.size
-        raise "Вагона с номером #{carriage_index} не существует."
-      end
+      raise "Вагона с номером #{carriage_index} не существует." if carriage_index > train.carriages.size
 
       carriage = train.carriages[carriage_index - 1]
       raise "В вагоне #{carriage_index} нет мест." if carriage.free_places.zero?
@@ -358,20 +289,92 @@ class Programm
     print_error_message e.message
   end
 
-  def print_error_message(msg)
-    puts "Ошибка: #{msg}"
-  end
-
   private
 
+  def show_stations
+    handle_exception do
+      raise NoInput, 'Вы не создали ни одной станции.' if @stations.empty?
+
+      puts 'Cписок станций:'
+      @stations.each_with_index { |station, i| puts "#{i + 1}. #{station.name} " }
+    end
+  end
+
   def station_by_name(station_name)
-    @stations.find { |station| station.name == station_name }
+      @stations.find { |station| station.name == station_name }
   end
 
   def route_by_name(route_name)
     @routes.find { |route| route.name == route_name }
   end
+
+  def show_list_cargo_carriages(train, train_number)
+    puts "Список вагонов в грузовом поезде #{train_number}:"
+    train.each_carriage do |cargo_carriage|
+      puts "Вагон №#{cargo_carriage.number}. Количество свободного " \
+           "объема: #{cargo_carriage.free_volume}. " \
+           "Количество занятого объема: #{cargo_carriage.occupied_volume}."
+    end
+  end
+
+  def show_list_pass_carriages(train, train_number)
+    puts "Список вагонов в пассажирском поезде #{train_number}:"
+    train.each_carriage do |pass_carriage|
+      puts "Вагон №#{pass_carriage.number}. " \
+           "Количество свободных мест: #{pass_carriage.free_places}. " \
+           "Количество занятых мест: #{pass_carriage.taken_places}."
+    end
+  end
+
+  def ask_train
+    handle_exception do
+      raise NoData, 'Вы не создали ни одного поезда' if Train.all.empty?
+
+      puts 'Введите номер нужного поезда'
+      number = gets.chomp
+      raise WrongInput, 'Поезда с таким номером не существует' if Train.find(number).nil?
+
+      number
+    end
+  end
+
+  def ask_train_number
+    handle_exception do
+      puts 'Введите номер поезда (в формате ххххх или ххх-хх)'
+      number = gets.chomp
+      raise WrongInput, 'Поезд с таким номером уже существует' if Train.find(number)
+
+      number
+    end
+  end
+
+  def ask_train_type
+    handle_exception do
+      puts 'Введите тип поезда: PassengerTrain или CargoTrain'
+      type = gets.chomp
+      raise WrongInput, 'Такого типа поезда не существует.' unless %w[CargoTrain PassengerTrain].include? type
+
+      type
+    end
+  end
+
+  def print_error_message(msg)
+    warn "Ошибка: #{msg}"
+  end
+
+  def handle_exception
+    yield
+  rescue WrongInput => e
+    warn "Ошибка: #{e.message}"
+    retry
+  rescue NoData => e
+    warn "Ошибка: #{e.message}"
+    program_process
+  rescue NoInput => e
+    warn "Ошибка: #{e.message}"
+    program_process
+  end
 end
 
-programm = Programm.new
-programm.programm_process
+program = Main.new
+program.program_process
