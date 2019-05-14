@@ -17,6 +17,8 @@ class Main
 
   attr_accessor :stations, :trains, :routes
 
+  MIN_AMOUNT_STATIONS = 3
+
   def initialize
     @stations = []
     @routes = []
@@ -77,36 +79,26 @@ class Main
   end
 
   def new_station
-    puts 'Введите название новой станции:'
-    name = gets.chomp
-    raise 'Вы не ввели название станции' if name.empty?
-    new_station = station_by_name(name)
-    raise "Станция #{name} уже существует" if @stations.include?(new_station)
-
+    name = ask_new_station_name
     station = Station.new(name)
     @stations.push(station)
     puts "Создана станция #{name}"
-  rescue StandardError => e
-    print_error_message e.message
   end
 
   def new_train
-    number = ask_train_number
-    type = ask_train_type
+    number = ask_new_train_number
+    type = choose_train_type
     Object.const_get(type).new(number)
     puts "Вы создали поезд. Номер: #{number}, тип: #{type}."
   end
 
   def new_route
     show_stations
-    puts 'Чтобы создать маршрут, введите первую и последнюю станцию на нем.'
-    station_name1 = gets.chomp
-    station_name2 = gets.chomp
-    raise 'Вы не ввели название станции' if station_name1.empty? || station_name2.empty?
+    puts 'Чтобы создать маршрут, нужно назвать первую и последнюю станции на нем.'
+    station_name1 = ask_station_name
+    station_name2 = ask_station_name
     station1 = station_by_name(station_name1)
     station2 = station_by_name(station_name2)
-    raise "Станции #{station_name1} не существует" unless @stations.include?(station1)
-    raise "Станции #{station_name2} не существует" unless @stations.include?(station2)
     raise 'Первая и последняя станция должны быть разными.' if station_name1 == station_name2
 
     route = Route.new(station1, station2)
@@ -116,32 +108,22 @@ class Main
     print_error_message e.message
   end
 
-  # choose a route and manage it (add, delete stations)
   def manage_route
-    raise 'Вы не создали ни одного маршрута' if @routes.empty?
+    show_routes
+    route_edit = ask_route
+    puts '1 - Добавить станцию; 2 - Удалить станцию'
+    choice = gets.to_i
+    if choice == 1
+      raise 'Недостаточно станций для добавления' if @stations.size < MIN_AMOUNT_STATIONS
 
-    puts 'Список существующих маршрутов:'
-    @routes.each_with_index { |route, i| puts "#{i + 1}. #{route.name} " }
-    puts 'Введите название маршрута, чтобы управлять им.'
-    route_name = gets.chomp
-    route_edit = route_by_name(route_name)
-    raise "Маршрут #{route_name} не найден" unless @routes.include?(route_edit)
-
-    puts 'Введите add, чтобы добавить станцию на маршрут'
-    puts 'Введите delete, чтобы удалить станцию из маршрута'
-    choice = gets.chomp
-    if choice == 'add'
-      puts 'Введите название станции, которую вы хотите добавить'
-      station_name = gets.chomp
+      station_name = ask_station_name
       station = station_by_name(station_name)
-      raise "Станции #{station_name} не существует" unless @stations.include?(station)
-      raise 'Вы не ввели названия станций' if station_name.empty?
-
       route_edit.add_station(station)
       puts "К маршруту добавлена станция #{station.name}."
-    elsif choice == 'delete'
-      puts 'Введите название станции, которую вы хотите удалить'
-      station_name = gets.chomp
+    elsif choice == 2
+      raise 'Недостаточно станций для удаления' if route_edit.stations_list.size < MIN_AMOUNT_STATIONS
+
+      station_name = ask_station_name
       station = station_by_name(station_name)
       route_edit.delete_middle_station(station)
       puts "Из маршрута удалена станция #{station.name}."
@@ -153,16 +135,10 @@ class Main
   end
 
   def assign_route
-    raise 'Вы не создали ни одного маршрута' if @routes.empty?
-
-    puts 'Список существующих маршрутов:'
-    @routes.each_with_index { |route, i| puts "#{i + 1}. #{route.name} " }
-
-    number = ask_train
+    show_routes
+    number = ask_exist_train_number
     train = Train.find(number)
-
-    puts 'Введите название маршрута'
-    route_name = gets.chomp
+    route_name = ask_route_name
     route = route_by_name(route_name)
     raise "Маршрут #{route_name} не найден" unless @routes.include?(route)
 
@@ -173,7 +149,7 @@ class Main
   end
 
   def add_carriage
-    train_number = ask_train
+    train_number = ask_exist_train_number
     train = Train.find(train_number)
     if train.type == :cargo
       puts 'Введите объем вагона'
@@ -197,14 +173,14 @@ class Main
   end
 
   def delete_carriage
-    train_number = ask_train
+    train_number = ask_exist_train_number
     train = Train.find(train_number)
     train.delete_carriage
     puts "Вагон отцеплен от поезда #{train_number}. Количество вагонов: #{train.carriages.size}."
   end
 
   def move_train
-    train_number = ask_train
+    train_number = ask_exist_train_number
     train = Train.find(train_number)
     raise 'Поезду не назначен ни один маршрут' if train.route.nil?
 
@@ -251,7 +227,7 @@ class Main
   end
 
   def take_place_carriage
-    train_number = ask_train
+    train_number = ask_exist_train_number
     train = Train.find(train_number)
     raise "В поезде #{train_number} нет вагонов." if train.carriages.empty?
 
@@ -291,9 +267,56 @@ class Main
 
   private
 
+  def ask_route_name
+    puts 'Введите название нужного маршрута.'
+    route_name = gets.chomp
+    # route_edit = route_by_name(route_name)
+    # raise "Маршрут #{route_name} не найден" unless @routes.include?(route_edit)
+  end
+
+  def ask_route
+    puts 'Введите название нужного маршрута.'
+    route_name = gets.chomp
+    route = route_by_name(route_name)
+    raise "Маршрут #{route_name} не найден" unless @routes.include?(route)
+
+    route
+  end
+
+  def ask_new_station_name
+    puts 'Введите название новой станции'
+    name = gets.chomp
+    raise 'Вы не ввели названия станций' if name.empty?
+    raise "Станция #{name} уже существует" if @stations.include?(station_by_name(name))
+
+    name
+  rescue StandardError => e
+    print_error_message e.message
+  end
+
+  def ask_station_name
+    puts 'Введите название станции'
+    name = gets.chomp
+    raise "Станции #{name} не существует" unless @stations.include?(station_by_name(name))
+    raise 'Вы не ввели названия станций' if name.empty?
+
+    name
+  rescue StandardError => e
+    print_error_message e.message
+  end
+
+  def show_routes
+    handle_exception do
+      raise NoData, 'Вы не создали ни одного маршрута' if @routes.empty?
+
+      puts 'Список существующих маршрутов:'
+      @routes.each_with_index { |route, i| puts "#{i + 1}. #{route.name} " }
+    end
+  end
+
   def show_stations
     handle_exception do
-      raise NoInput, 'Вы не создали ни одной станции.' if @stations.empty?
+      raise NoData, 'Вы не создали ни одной станции.' if @stations.empty?
 
       puts 'Cписок станций:'
       @stations.each_with_index { |station, i| puts "#{i + 1}. #{station.name} " }
@@ -301,7 +324,7 @@ class Main
   end
 
   def station_by_name(station_name)
-      @stations.find { |station| station.name == station_name }
+    @stations.find { |station| station.name == station_name }
   end
 
   def route_by_name(route_name)
@@ -326,7 +349,7 @@ class Main
     end
   end
 
-  def ask_train
+  def ask_exist_train_number
     handle_exception do
       raise NoData, 'Вы не создали ни одного поезда' if Train.all.empty?
 
@@ -338,7 +361,7 @@ class Main
     end
   end
 
-  def ask_train_number
+  def ask_new_train_number
     handle_exception do
       puts 'Введите номер поезда (в формате ххххх или ххх-хх)'
       number = gets.chomp
@@ -348,7 +371,7 @@ class Main
     end
   end
 
-  def ask_train_type
+  def choose_train_type
     handle_exception do
       puts 'Введите тип поезда: PassengerTrain или CargoTrain'
       type = gets.chomp
