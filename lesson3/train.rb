@@ -84,12 +84,16 @@ class Train
   end
 
   def move_forward
+    raise 'Поезд уже находится на конечной станции.' if current_station == @route.stations_list.last
+
     current_station.train_out self
     next_station.train_in self
     @station_index += 1 if @route.stations_list.size - 1 > @station_index
   end
 
   def move_back
+    raise 'Поезд уже находится на начальной станции.' if current_station == route.stations_list.first
+
     current_station.train_out self
     previous_station.train_in self
     @station_index -= 1 unless @station_index.zero?
