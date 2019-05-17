@@ -96,58 +96,60 @@ class Main # rubocop:disable Metrics/ClassLength
 
   # choice 3
   def new_route # rubocop:disable Metrics/MethodLength
-    show_stations
-    puts 'Чтобы создать маршрут, нужно назвать первую и последнюю станции на нем.'
-    station_name1 = ask_station_name
-    station_name2 = ask_station_name
-    station1 = station_by_name(station_name1)
-    station2 = station_by_name(station_name2)
-    raise 'Первая и последняя станция должны быть разными.' if station_name1 == station_name2
+    handle_exception do
+      show_stations
+      puts 'Чтобы создать маршрут, нужно назвать первую и последнюю станции на нем.'
+      station_name1 = ask_station_name
+      station_name2 = ask_station_name
+      station1 = station_by_name(station_name1)
+      station2 = station_by_name(station_name2)
+      raise WrongInput, 'Первая и последняя станция должны быть разными.' if station_name1 == station_name2
 
-    route = Route.new(station1, station2)
-    @routes.push(route)
-    puts "Был создан маршрут #{route.name}."
-  rescue StandardError => e
-    print_error_message e.message
+      route = Route.new(station1, station2)
+      @routes.push(route)
+      puts "Был создан маршрут #{route.name}."
+    end
   end
 
   # choice 9
   def manage_route # rubocop:disable Metrics/MethodLength
-    show_routes
-    route_name = ask_route_name
-    route_edit = route_by_name(route_name)
-    puts '1 - Добавить станцию; 2 - Удалить станцию'
-    choice = gets.to_i
-    if choice == 1
-      raise 'Недостаточно станций для добавления' if @stations.size < MIN_AMOUNT_STATIONS
+    handle_exception do
+      show_routes
+      route_name = ask_route_name
+      route_edit = route_by_name(route_name)
+      puts '1 - Добавить станцию; 2 - Удалить станцию'
+      choice = gets.to_i
+      if choice == 1
+        raise NoData, 'Недостаточно станций для добавления' if @stations.size < MIN_AMOUNT_STATIONS
 
-      station_name = ask_station_name
-      station = station_by_name(station_name)
-      route_edit.add_station(station)
-      puts "К маршруту добавлена станция #{station.name}."
-    elsif choice == 2
-      raise 'Недостаточно станций для удаления' if route_edit.stations_list.size < MIN_AMOUNT_STATIONS
+        station_name = ask_station_name
+        station = station_by_name(station_name)
+        route_edit.add_station(station)
+        puts "К маршруту добавлена станция #{station.name}."
+      elsif choice == 2
+        raise NoData, 'Недостаточно станций для удаления' if route_edit.stations_list.size < MIN_AMOUNT_STATIONS
 
-      station_name = ask_station_name
-      station = station_by_name(station_name)
-      route_edit.delete_middle_station(station)
-      puts "Из маршрута удалена станция #{station.name}."
-    else
-      program_process
+        station_name = ask_station_name
+        station = station_by_name(station_name)
+        route_edit.delete_middle_station(station)
+        puts "Из маршрута удалена станция #{station.name}."
+      else
+        program_process
+      end
     end
-  rescue StandardError => e
-    print_error_message e.message
   end
 
   # choice 4
   def assign_route
-    show_routes
-    number = ask_exist_train_number
-    train = Train.find(number)
-    route_name = ask_route_name
-    route = route_by_name(route_name)
-    train.assign_route(route)
-    puts "Поезду #{number} был назначен маршрут #{route.name}."
+    handle_exception do
+      show_routes
+      number = ask_exist_train_number
+      train = Train.find(number)
+      route_name = ask_route_name
+      route = route_by_name(route_name)
+      train.assign_route(route)
+      puts "Поезду #{number} был назначен маршрут #{route.name}."
+    end
   end
 
   # choice 5
@@ -181,72 +183,74 @@ class Main # rubocop:disable Metrics/ClassLength
 
   # choice 7
   def move_train # rubocop:disable Metrics/MethodLength
-    train_number = ask_exist_train_number
-    train = Train.find(train_number)
-    raise 'Поезду не назначен ни один маршрут' if train.route.nil?
+    handle_exception do
+      train_number = ask_exist_train_number
+      train = Train.find(train_number)
+      raise NoData, 'Поезду не назначен ни один маршрут' if train.route.nil?
 
-    puts '1 - переместить поезд вперед, 2 - переместить поезд назад'
-    choice = gets.to_i
-    if choice == 1
-      train.move_forward
-      puts "Поезд переместился вперед на станцию #{train.current_station.name}"
-    elsif choice == 2
-      train.move_back
-      puts "Поезд переместился назад на станцию #{train.current_station.name}."
-    else
-      puts 'Ошибка в наборе'
+      puts '1 - переместить поезд вперед, 2 - переместить поезд назад'
+      choice = gets.to_i
+      if choice == 1
+        train.move_forward
+        puts "Поезд переместился вперед на станцию #{train.current_station.name}"
+      elsif choice == 2
+        train.move_back
+        puts "Поезд переместился назад на станцию #{train.current_station.name}."
+      else
+        puts 'Ошибка в наборе'
+      end
     end
-  rescue StandardError => e
-    print_error_message e.message
   end
 
   # choice 8
   def stations_and_trains
-    show_stations
-    station_name = ask_station_name
-    station = station_by_name(station_name)
-    puts "На станции #{station.name} находятся следующие поезда: "
-    station.each_train do |train|
-      puts "#{train.number}. Тип #{train.type}. Количество вагонов: #{train.carriages.size}."
+    handle_exception do
+      show_stations
+      station_name = ask_station_name
+      station = station_by_name(station_name)
+      puts "На станции #{station.name} находятся следующие поезда: "
+      station.each_train do |train|
+        puts "#{train.number}. Тип #{train.type}. Количество вагонов: #{train.carriages.size}."
+      end
     end
   end
 
   # choice 8-1
   def take_place_carriage # rubocop:disable Metrics/MethodLength
-    train_number = ask_exist_train_number
-    train = Train.find(train_number)
-    raise "В поезде #{train_number} нет вагонов." if train.carriages.empty?
+    handle_exception do
+      train_number = ask_exist_train_number
+      train = Train.find(train_number)
+      raise NoData, "В поезде #{train_number} нет вагонов." if train.carriages.empty?
 
-    if train.type == :cargo
-      show_list_cargo_carriages(train, train_number)
-      carriage_index = ask_carriage_number(train)
-      carriage = train.carriages[carriage_index - 1]
-      amount_volume = ask_need_volume(carriage)
-      carriage.take_volume(amount_volume)
-      puts "Вы заняли #{amount_volume} единицы объема в вагоне #{carriage_index}."
-    elsif train.type == :passenger
-      show_list_pass_carriages(train, train_number)
-      carriage_index = ask_carriage_number(train)
-      carriage = train.carriages[carriage_index - 1]
-      raise "В вагоне #{carriage_index} нет мест." if carriage.free_places.zero?
+      if train.type == :cargo
+        show_list_cargo_carriages(train, train_number)
+        carriage_index = ask_carriage_number(train)
+        carriage = train.carriages[carriage_index - 1]
+        amount_volume = ask_need_volume(carriage)
+        carriage.take_volume(amount_volume)
+        puts "Вы заняли #{amount_volume} единицы объема в вагоне #{carriage_index}."
+      elsif train.type == :passenger
+        show_list_pass_carriages(train, train_number)
+        carriage_index = ask_carriage_number(train)
+        carriage = train.carriages[carriage_index - 1]
+        raise NoData, "В вагоне #{carriage_index} нет мест." if carriage.free_places.zero?
 
-      carriage.take_place
-      puts "Вы заняли одно место в вагоне #{carriage_index}."
-    else
-      puts 'Поезд не найден'
+        carriage.take_place
+        puts "Вы заняли одно место в вагоне #{carriage_index}."
+      else
+        puts 'Поезд не найден'
+      end
     end
-  rescue StandardError => e
-    print_error_message e.message
   end
 
   private
 
   def ask_need_volume(carriage)
-    raise 'В вагоне нет свободного места.' if carriage.free_volume.zero?
+    raise NoData, 'В вагоне нет свободного места.' if carriage.free_volume.zero?
 
     puts 'Введите количество объема, который вы хотите загрузить в вагон.'
     amount_volume = gets.to_i
-    raise "Доступный объем в вагоне: #{carriage.free_volume}." if amount_volume > carriage.free_volume
+    raise WrongInput, "Доступный объем в вагоне: #{carriage.free_volume}." if amount_volume > carriage.free_volume
 
     amount_volume
   end
@@ -264,7 +268,7 @@ class Main # rubocop:disable Metrics/ClassLength
   def ask_carriage_number(train)
     puts 'Введите номер вагона, где вы хотите занять место'
     carriage_index = gets.to_i
-    raise "Вагона с номером #{carriage_index} не существует." if carriage_index > train.carriages.size
+    raise NoData, "Вагона с номером #{carriage_index} не существует." if carriage_index > train.carriages.size
 
     carriage_index
   end
@@ -272,49 +276,43 @@ class Main # rubocop:disable Metrics/ClassLength
   def ask_route_name
     puts 'Введите название нужного маршрута.'
     route_name = gets.chomp
-    raise "Маршрут #{route_name} не найден" unless @routes.include?(route_by_name(route_name))
+    raise NoData, "Маршрут #{route_name} не найден" unless @routes.include?(route_by_name(route_name))
 
     route_name
   end
 
   def ask_new_station_name
-    puts 'Введите название новой станции'
-    name = gets.chomp
-    raise 'Вы не ввели названия станций' if name.empty?
-    raise "Станция #{name} уже существует" if @stations.include?(station_by_name(name))
+    handle_exception do
+      puts 'Введите название новой станции'
+      name = gets.chomp
+      raise NoInput, 'Вы не ввели названия станций' if name.empty?
+      raise WrongInput, "Станция #{name} уже существует" if @stations.include?(station_by_name(name))
 
-    name
-  rescue StandardError => e
-    print_error_message e.message
+      name
+    end
   end
 
   def ask_station_name
-    puts 'Введите название станции'
-    name = gets.chomp
-    raise 'Вы не ввели названия станций' if name.empty?
-    raise "Станции #{name} не существует" unless @stations.include?(station_by_name(name))
+      puts 'Введите название станции'
+      name = gets.chomp
+      raise NoInput, 'Вы не ввели названия станций' if name.empty?
+      raise WrongInput, "Станции #{name} не существует" unless @stations.include?(station_by_name(name))
 
     name
-  rescue StandardError => e
-    print_error_message e.message
   end
 
   def show_routes
-    handle_exception do
       raise NoData, 'Вы не создали ни одного маршрута' if @routes.empty?
 
       puts 'Список существующих маршрутов:'
       @routes.each_with_index { |route, i| puts "#{i + 1}. #{route.name} " }
-    end
   end
 
   def show_stations
-    handle_exception do
       raise NoData, 'Вы не создали ни одной станции.' if @stations.empty?
 
       puts 'Cписок станций:'
       @stations.each_with_index { |station, i| puts "#{i + 1}. #{station.name} " }
-    end
   end
 
   def station_by_name(station_name)
