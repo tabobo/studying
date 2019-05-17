@@ -53,16 +53,16 @@ class Train
   end
 
   def add_carriage(carriage)
-    raise 'Чтобы прицепить вагон поезд должен стоять!' unless @speed.zero?
+    raise 'Чтобы прицепить вагон поезд должен стоять!' unless speed.zero?
 
-    @carriages.push(carriage) if carriage.type == @type
+    carriages.push(carriage) if carriage.type == type
   end
 
   def delete_carriage
-    raise 'Чтобы отцепить вагон поезд должен стоять!' unless @speed.zero?
-    raise 'В поезде нет вагонов' unless @carriages.any?
+    raise 'Чтобы отцепить вагон поезд должен стоять!' unless speed.zero?
+    raise 'В поезде нет вагонов' unless carriages.any?
 
-    @carriages.pop
+    carriages.pop
   end
 
   def assign_route(route)
@@ -100,7 +100,7 @@ class Train
   end
 
   def each_carriage
-    @carriages.each { |carriage| yield(carriage) } if block_given?
+    carriages.each { |carriage| yield(carriage) } if block_given?
   end
 
   private

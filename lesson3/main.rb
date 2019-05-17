@@ -293,26 +293,26 @@ class Main # rubocop:disable Metrics/ClassLength
   end
 
   def ask_station_name
-      puts 'Введите название станции'
-      name = gets.chomp
-      raise NoInput, 'Вы не ввели названия станций' if name.empty?
-      raise WrongInput, "Станции #{name} не существует" unless @stations.include?(station_by_name(name))
+    puts 'Введите название станции'
+    name = gets.chomp
+    raise NoInput, 'Вы не ввели названия станций' if name.empty?
+    raise WrongInput, "Станции #{name} не существует" unless @stations.include?(station_by_name(name))
 
     name
   end
 
   def show_routes
-      raise NoData, 'Вы не создали ни одного маршрута' if @routes.empty?
+    raise NoData, 'Вы не создали ни одного маршрута' if @routes.empty?
 
-      puts 'Список существующих маршрутов:'
-      @routes.each_with_index { |route, i| puts "#{i + 1}. #{route.name} " }
+    puts 'Список существующих маршрутов:'
+    @routes.each_with_index { |route, i| puts "#{i + 1}. #{route.name} " }
   end
 
   def show_stations
-      raise NoData, 'Вы не создали ни одной станции.' if @stations.empty?
+    raise NoData, 'Вы не создали ни одной станции.' if @stations.empty?
 
-      puts 'Cписок станций:'
-      @stations.each_with_index { |station, i| puts "#{i + 1}. #{station.name} " }
+    puts 'Cписок станций:'
+    @stations.each_with_index { |station, i| puts "#{i + 1}. #{station.name} " }
   end
 
   def station_by_name(station_name)

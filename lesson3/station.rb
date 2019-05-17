@@ -23,18 +23,18 @@ class Station
   end
 
   def train_in(train)
-    @trains << train
+    trains << train
   end
 
   def trains_by_type(type)
-    @trains.select { |train| train.type == type }
+    trains.select { |train| train.type == type }
   end
 
   def each_train
-    @trains.each { |train| yield(train) } if block_given?
+    trains.each { |train| yield(train) } if block_given?
   end
 
   def train_out(train)
-    @trains.delete(train)
+    trains.delete(train)
   end
 end
