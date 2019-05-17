@@ -1,0 +1,13 @@
+Documentation:
+    Enabled: false
+
+Metrics/LineLength:
+  Max: 114
+
+Lint/Void:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+

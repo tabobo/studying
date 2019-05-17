@@ -31,10 +31,10 @@ class Main # rubocop:disable Metrics/ClassLength
       show_menu
 
       begin
-        choice = gets.chomp.downcase
-        break if choice.nil?
+          choice = gets.chomp.downcase
+          break if choice.nil?
 
-        user_action(choice)
+          user_action(choice)
       rescue StandardError => e
         print_error_message e.message
       end
