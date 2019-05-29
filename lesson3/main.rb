@@ -31,10 +31,10 @@ class Main # rubocop:disable Metrics/ClassLength
       show_menu
 
       begin
-          choice = gets.chomp.downcase
-          break if choice.nil?
+        choice = gets.chomp.downcase
+        break if choice.nil?
 
-          user_action(choice)
+        user_action(choice)
       rescue StandardError => e
         print_error_message e.message
       end
@@ -285,7 +285,6 @@ class Main # rubocop:disable Metrics/ClassLength
     handle_exception do
       puts 'Введите название новой станции'
       name = gets.chomp
-      raise NoInput, 'Вы не ввели названия станций' if name.empty?
       raise WrongInput, "Станция #{name} уже существует" if @stations.include?(station_by_name(name))
 
       name
@@ -295,7 +294,6 @@ class Main # rubocop:disable Metrics/ClassLength
   def ask_station_name
     puts 'Введите название станции'
     name = gets.chomp
-    raise NoInput, 'Вы не ввели названия станций' if name.empty?
     raise WrongInput, "Станции #{name} не существует" unless @stations.include?(station_by_name(name))
 
     name
